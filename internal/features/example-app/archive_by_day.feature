@@ -1,0 +1,1 @@
+Feature: Archive by day

@@ -2,10 +2,12 @@
 Ferb
 ====
 
+Nothing to see here, move along :)
+
 Ferb is a static site generator.
 Ferb is besties with git and s3.
 
-
+```
   source/                              ------>  dist/
   .  content/                          ------>  .  content/
   .  .  sitemap.xml.tmpl               ------>  .  .  sitemap.xml
@@ -56,3 +58,5 @@ Ferb is besties with git and s3.
   .  .  .  site.css                    ------>  .  .  .  site-711a8021.css
   .  layouts/
   .  partials/
+
+```

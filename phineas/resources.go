@@ -32,14 +32,3 @@ func (s Resources) Less(i, j int) bool {
 func (s Resources) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
-
-type Index struct {
-	buildPath string
-	resource  Resource
-}
-
-func (r *Index) BuildPath() string {
-	return "todo"
-}
-
-type Indexes []Index

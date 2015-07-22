@@ -28,6 +28,8 @@ func (r *MarkdownResource) Build() error {
 }
 
 func (r *MarkdownResource) BuildPath() string {
+	// TODO rebuild w/ root() and base()?
+
 	path, err := filepath.Rel(r.contentRoot, r.contentPath)
 	slog.PanicIf(err)
 
@@ -40,4 +42,26 @@ func (r *MarkdownResource) BuildPath() string {
 		base,
 		fmt.Sprintf("index.html"),
 	)
+}
+
+func (r *MarkdownResource) base() string {
+	return filepath.Base(r.contentPath)
+}
+
+func (r *MarkdownResource) root() string {
+	root, err := filepath.Rel(r.contentRoot, filepath.Dir(r.contentPath))
+	slog.PanicIf(err)
+	return root
+}
+
+func (r *MarkdownResource) dayArchiveId() string {
+	return filepath.Join(r.root(), r.base()[:10])
+}
+
+func (r *MarkdownResource) monthArchiveId() string {
+	return filepath.Join(r.root(), r.base()[:7])
+}
+
+func (r *MarkdownResource) yearArchiveId() string {
+	return filepath.Join(r.root(), r.base()[:4])
 }

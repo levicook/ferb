@@ -1,10 +1,8 @@
 package phineas
 
 import (
-	"log"
 	"os"
 	"path/filepath"
-	"sort"
 )
 
 func ensureDirectoryExists(path string) error {
@@ -16,15 +14,19 @@ func ensureDirectoryExists(path string) error {
 
 func Build() error {
 	var (
+		//layoutsRoot = filepath.Join(sourceRoot, "layouts")
+
 		sourceRoot  = "source"
 		contentRoot = filepath.Join(sourceRoot, "content")
 		buildRoot   = "build"
-		//layoutsRoot = filepath.Join(sourceRoot, "layouts")
 	)
 
 	ensureDirectoryExists(buildRoot)
 
-	var resources Resources
+	var (
+		resources Resources
+		archives  = make(map[string]*Archive)
+	)
 
 	err := filepath.Walk(contentRoot, func(contentPath string, contentInfo os.FileInfo, err error) error {
 		if err != nil {
@@ -35,43 +37,43 @@ func Build() error {
 			return nil
 		}
 
+		joinArchive := func(archiveId string, resource Resource) {
+			if _, ok := archives[archiveId]; !ok {
+				archives[archiveId] = &Archive{archiveId: archiveId, buildRoot: buildRoot}
+			}
+
+			archive := archives[archiveId]
+			archive.add(resource)
+		}
+
 		switch {
 
 		case contentInfo.IsDir():
-			resources = append(resources, &DirectoryResource{
-				buildRoot:   buildRoot,
-				contentRoot: contentRoot,
-				contentPath: contentPath,
-			})
+			resources = append(resources, &DirectoryResource{buildRoot: buildRoot, contentRoot: contentRoot, contentPath: contentPath})
 
 		case filepath.Ext(contentPath) == ".md":
-			resources = append(resources, &MarkdownResource{
-				buildRoot:   buildRoot,
-				contentRoot: contentRoot,
-				contentPath: contentPath,
-			})
+			resource := &MarkdownResource{buildRoot: buildRoot, contentRoot: contentRoot, contentPath: contentPath}
+			joinArchive(resource.dayArchiveId(), resource)
+			joinArchive(resource.monthArchiveId(), resource)
+			joinArchive(resource.yearArchiveId(), resource)
+			resources = append(resources, resource)
 
 		case filepath.Ext(contentPath) == ".tmpl":
-			resources = append(resources, &TemplateResource{
-				buildRoot:   buildRoot,
-				contentRoot: contentRoot,
-				contentPath: contentPath,
-			})
+			resource := &TemplateResource{buildRoot: buildRoot, contentRoot: contentRoot, contentPath: contentPath}
+			resources = append(resources, resource)
 
 		}
 
 		return nil
 	})
 
-	sort.Sort(resources)
-
-	for i := range resources {
-		log.Println("Building", resources[i].BuildPath())
-
-		if err = resources[i].Build(); err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
-	return err
+	for _, archive := range archives {
+		resources = append(resources, archive)
+	}
+
+	return resources.Build()
 }

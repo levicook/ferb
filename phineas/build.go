@@ -39,11 +39,13 @@ func Build() error {
 
 		joinArchive := func(archiveId string, resource Resource) {
 			if _, ok := archives[archiveId]; !ok {
-				archives[archiveId] = &Archive{archiveId: archiveId, buildRoot: buildRoot}
+				archives[archiveId] = &Archive{
+					archiveId: archiveId,
+					buildRoot: buildRoot,
+				}
 			}
 
-			archive := archives[archiveId]
-			archive.add(resource)
+			archives[archiveId].add(resource)
 		}
 
 		switch {
@@ -71,8 +73,13 @@ func Build() error {
 		return err
 	}
 
-	for _, archive := range archives {
-		resources = append(resources, archive)
+	for i := range archives {
+
+		archivePages := archives[i].ArchivePages()
+
+		for j := range archivePages {
+			resources = append(resources, &archivePages[j])
+		}
 	}
 
 	return resources.Build()

@@ -1,42 +1,43 @@
 package phineas
 
-import (
-	"os"
-	"path/filepath"
-	"strings"
-)
-
 type Archive struct {
 	archiveId string
 	buildRoot string
 	resources Resources
 }
 
-func (a *Archive) Build() error {
-	buildPath := a.BuildPath()
+func (a *Archive) add(r Resource) {
+	a.resources = append(a.resources, r)
+}
 
-	if err := ensureDirectoryExists(filepath.Dir(buildPath)); err != nil {
-		return err
+func (a *Archive) ArchivePages() (pages []ArchivePage) {
+	// TODO perPage from config / frontmatter?
+	// TODO sort resources
+	pageNumber := 1
+	perPage := 1
+
+	page := ArchivePage{
+		archiveId:  a.archiveId,
+		buildRoot:  a.buildRoot,
+		perPage:    perPage,
+		pageNumber: pageNumber,
 	}
 
-	file, err := os.Create(buildPath)
-	defer file.Close()
-	return err
-}
+	for _, resource := range a.resources {
+		page.resources = append(page.resources, resource)
 
-func (a *Archive) BuildPath() string {
-	return filepath.Join(
-		a.buildRoot,
-		filepath.Dir(a.archiveId),
-		strings.Replace(a.base(), "-", string(os.PathSeparator), -1),
-		"index.html",
-	)
-}
+		if len(page.resources) == perPage {
+			pageNumber++
+			pages = append(pages, page)
 
-func (a *Archive) add(r Resource) {
-	// TODO
-}
+			page = ArchivePage{
+				archiveId:  a.archiveId,
+				buildRoot:  a.buildRoot,
+				perPage:    perPage,
+				pageNumber: pageNumber,
+			}
+		}
+	}
 
-func (a *Archive) base() string {
-	return filepath.Base(a.archiveId)
+	return pages
 }

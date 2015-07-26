@@ -1,2 +1,0 @@
-Feature: Archive by tag
-
